@@ -1,11 +1,13 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, Button, FlatList, StyleSheet, PanResponder } from 'react-native';
+import { IconButton } from 'react-native-paper';
+
 import { supabase } from '../utils/supabase';
 import { getChatbotResponse } from '../api/geminiProAPI';
 import Sidebar from '../components/SideBar';
+import Header from '../components/Header';
 
-// Memoize the MessageItem component using React.memo
 const MessageItem = React.memo(({ item }) => (
   <View style={[
     styles.messageContainer,
@@ -77,8 +79,10 @@ export default function ChatScreen() {
     try {
       const chatbotResponse = await getChatbotResponse(input);
 
+      const formattedResponse = formatResponse(chatbotResponse.text);
+
       const botMessage = {
-        text: chatbotResponse.text,
+        text: formattedResponse,
         created_at: new Date().toISOString(),
         user: 'bot',
       };
@@ -93,6 +97,12 @@ export default function ChatScreen() {
     }
   };
 
+  const formatResponse = (responseText) => {
+    let formattedText = responseText;
+  
+    return formattedText;
+  };
+  
   // PanResponder for handling swipe gesture
   const panResponder = useRef(
     PanResponder.create({
@@ -111,66 +121,87 @@ export default function ChatScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Sidebar with dynamic style based on sidebarVisible state */}
-      <View style={[styles.sidebarContainer, { width: sidebarVisible ? '20%' : 0 }]}>
-        <Sidebar />
+      <View style={styles.header}>
+        <Header />
       </View>
-      <View
-        style={[styles.chatContainer, { flex: sidebarVisible ? 3 : 4 }]}
-        {...panResponder.panHandlers}
-      >
 
-        <FlatList
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => <MessageItem item={item} />}
-          onContentSizeChange={(contentWidth, contentHeight) => {
-            const shouldScrollToEnd = (
-              flatListRef.current &&
-              flatListRef.current.layoutMeasurement &&
-              contentHeight > flatListRef.current.layoutMeasurement.height
-            );
-            if (shouldScrollToEnd) {
-              flatListRef.current.scrollToEnd({ animated: true });
-            }
-          }}
-          onLayout={() => {
-            const shouldScrollToEnd = (
-              flatListRef.current &&
-              flatListRef.current.contentSize &&
-              flatListRef.current.contentOffset &&
-              flatListRef.current.contentSize.height > flatListRef.current.layoutMeasurement.height &&
-              flatListRef.current.contentOffset.y > 0
-            );
-            if (shouldScrollToEnd) {
-              flatListRef.current.scrollToEnd({ animated: true });
-            }
-          }}
-        />
+      <View style={{ flex: 1, flexDirection: 'row' }}>
+        <View style={[styles.sidebarContainer, { width: sidebarVisible ? '20%' : 0 }]}>
+          <Sidebar sidebarVisible={sidebarVisible} />
+        </View>
+
+        <View style={{ flex: 1 }}>
+          <View
+            style={[styles.chatContainer, { flex: sidebarVisible ? 3 : 4 }]}
+            {...panResponder.panHandlers}
+          >
+
+            <FlatList
+              ref={flatListRef}
+              data={messages}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => <MessageItem item={item} />}
+              onContentSizeChange={(contentWidth, contentHeight) => {
+                const shouldScrollToEnd = (
+                  flatListRef.current &&
+                  flatListRef.current.layoutMeasurement &&
+                  contentHeight > flatListRef.current.layoutMeasurement.height
+                );
+                if (shouldScrollToEnd) {
+                  flatListRef.current.scrollToEnd({ animated: true });
+                }
+              }}
+              onLayout={() => {
+                const shouldScrollToEnd = (
+                  flatListRef.current &&
+                  flatListRef.current.contentSize &&
+                  flatListRef.current.contentOffset &&
+                  flatListRef.current.contentSize.height > flatListRef.current.layoutMeasurement.height &&
+                  flatListRef.current.contentOffset.y > 0
+                );
+                if (shouldScrollToEnd) {
+                  flatListRef.current.scrollToEnd({ animated: true });
+                }
+              }}
+            />
 
 
-        <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.input}
-            value={input}
-            onChangeText={setInput}
-            placeholder="Type your message"
-          />
-          <Button title="Send" onPress={sendMessage} />
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                value={input}
+                onChangeText={setInput}
+                placeholder="Type your message"
+              />
+              <IconButton
+                icon="send"
+                color="#000"
+                size={24}
+                onPress={sendMessage}
+              />
+            </View>
+          </View>
         </View>
       </View>
     </View>
   );
+
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
+  },
+  header: {
+    backgroundColor: '#f4f4f4',
+    padding: 5,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
   },
   chatContainer: {
-    padding: 20,
+    padding: 10,
   },
   messageContainer: {
     padding: 10,
@@ -187,11 +218,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ccc',
     padding: 10,
-    marginRight: 10,
+borderRadius: 55,
   },
   sidebarContainer: {
     left: 0,
     backgroundColor: '#f4f4f4',
+  },
+  bold: {
+    fontWeight: 'bold',
+  },
+  italic: {
+    fontStyle: 'italic',
   },
 });
 
