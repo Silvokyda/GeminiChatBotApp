@@ -22,7 +22,9 @@ export default function ChatScreen() {
       } else {
         setMessages(data);
         // Scroll to the bottom when messages update
-        flatListRef.current.scrollToEnd();
+        if (flatListRef.current) {
+          flatListRef.current.scrollToEnd({ animated: true });
+        }
       }
     };
 
@@ -34,7 +36,9 @@ export default function ChatScreen() {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
         setMessages((prev) => [...prev, payload.new]);
         // Scroll to the bottom when new message arrives
-        flatListRef.current.scrollToEnd();
+        if (flatListRef.current) {
+          flatListRef.current.scrollToEnd({ animated: true });
+        }
       })
       .subscribe();
 
@@ -45,40 +49,40 @@ export default function ChatScreen() {
 
   const sendMessage = async () => {
     if (!input.trim()) return; // Ignore empty messages
-    
+
     const userMessage = {
       text: input,
       created_at: new Date().toISOString(),
       user: 'user', // This should be dynamic based on logged-in user
     };
-  
+
     const { error: userMessageError } = await supabase.from('messages').insert([userMessage]);
-  
+
     if (userMessageError) {
       console.error(userMessageError);
       return;
     }
-  
+
     setInput('');
 
     try {
       const chatbotResponse = await getChatbotResponse(input);
-  
+
       const botMessage = {
-        text: chatbotResponse.text, 
+        text: chatbotResponse.text,
         created_at: new Date().toISOString(),
         user: 'bot'
       };
-  
+
       const { error: botMessageError } = await supabase.from('messages').insert([botMessage]);
-  
+
       if (botMessageError) {
         console.error(botMessageError);
       }
     } catch (error) {
       console.error('Error getting chatbot response:', error);
     }
-  };  
+  };
 
   return (
     <View style={styles.container}>
@@ -94,8 +98,16 @@ export default function ChatScreen() {
             <Text>{item.user}: {item.text}</Text>
           </View>
         )}
-        onContentSizeChange={() => flatListRef.current.scrollToEnd()}
-        onLayout={() => flatListRef.current.scrollToEnd()}
+        onContentSizeChange={() => {
+          if (flatListRef.current) {
+            flatListRef.current.scrollToEnd({ animated: true });
+          }
+        }}
+        onLayout={() => {
+          if (flatListRef.current) {
+            flatListRef.current.scrollToEnd({ animated: true });
+          }
+        }}
       />
       <View style={styles.inputContainer}>
         <TextInput
@@ -119,7 +131,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
-    maxWidth: '80%', 
+    maxWidth: '80%',
   },
   inputContainer: {
     flexDirection: 'row',
