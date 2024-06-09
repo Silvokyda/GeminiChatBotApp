@@ -42,29 +42,41 @@ export default function ChatScreen() {
       created_at: new Date().toISOString(),
       user: 'user', // This should be dynamic based on logged-in user
     };
-
+  
     const { error: userMessageError } = await supabase.from('messages').insert([userMessage]);
-
+  
     if (userMessageError) {
       console.error(userMessageError);
+      return;
     }
-
-    const chatbotResponse = await getChatbotResponse(input);
-
-    const botMessage = {
-      text: chatbotResponse.text, 
-      created_at: new Date().toISOString(),
-      user: 'bot'
-    };    
-
-    const { error: botMessageError } = await supabase.from('messages').insert([botMessage]);
-
-    if (botMessageError) {
-      console.error(botMessageError);
-    }
-
+  
+    // Update messages state immediately to show user message
+    setMessages(prev => [...prev, userMessage]);
+  
     setInput('');
+  
+    try {
+      const chatbotResponse = await getChatbotResponse(input);
+  
+      const botMessage = {
+        text: chatbotResponse.text,
+        created_at: new Date().toISOString(),
+        user: 'bot'
+      };
+  
+      const { error: botMessageError } = await supabase.from('messages').insert([botMessage]);
+  
+      if (botMessageError) {
+        console.error(botMessageError);
+      }
+  
+      // Update messages state to include bot message
+      setMessages(prev => [...prev, botMessage]);
+    } catch (error) {
+      console.error('Error getting chatbot response:', error);
+    }
   };
+  
 
   return (
     <View style={styles.container}>
@@ -100,7 +112,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
-    maxWidth: '80%', // Limit message width
+    maxWidth: '80%', 
   },
   input: {
     borderWidth: 1,
