@@ -1,5 +1,5 @@
-import { supabaseConfig } from '../config/config';
 import { createClient } from '@supabase/supabase-js';
+import { supabaseConfig } from '../config/config';
 
 const { supabaseUrl, supabaseKey } = supabaseConfig;
 

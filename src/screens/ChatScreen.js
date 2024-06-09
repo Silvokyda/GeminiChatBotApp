@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, Button, FlatList, StyleSheet } from 'react-native';
 import { supabase } from '../utils/supabase';
 import { getChatbotResponse } from '../api/geminiProAPI';
@@ -6,6 +6,9 @@ import { getChatbotResponse } from '../api/geminiProAPI';
 export default function ChatScreen() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+
+  // Ref to scroll to the bottom of FlatList
+  const flatListRef = useRef();
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -18,6 +21,8 @@ export default function ChatScreen() {
         console.error(error);
       } else {
         setMessages(data);
+        // Scroll to the bottom when messages update
+        flatListRef.current.scrollToEnd();
       }
     };
 
@@ -28,6 +33,8 @@ export default function ChatScreen() {
       .channel('public:messages')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
         setMessages((prev) => [...prev, payload.new]);
+        // Scroll to the bottom when new message arrives
+        flatListRef.current.scrollToEnd();
       })
       .subscribe();
 
@@ -37,6 +44,8 @@ export default function ChatScreen() {
   }, []);
 
   const sendMessage = async () => {
+    if (!input.trim()) return; // Ignore empty messages
+    
     const userMessage = {
       text: input,
       created_at: new Date().toISOString(),
@@ -50,16 +59,13 @@ export default function ChatScreen() {
       return;
     }
   
-    // Update messages state immediately to show user message
-    setMessages(prev => [...prev, userMessage]);
-  
     setInput('');
-  
+
     try {
       const chatbotResponse = await getChatbotResponse(input);
   
       const botMessage = {
-        text: chatbotResponse.text,
+        text: chatbotResponse.text, 
         created_at: new Date().toISOString(),
         user: 'bot'
       };
@@ -69,18 +75,15 @@ export default function ChatScreen() {
       if (botMessageError) {
         console.error(botMessageError);
       }
-  
-      // Update messages state to include bot message
-      setMessages(prev => [...prev, botMessage]);
     } catch (error) {
       console.error('Error getting chatbot response:', error);
     }
-  };
-  
+  };  
 
   return (
     <View style={styles.container}>
       <FlatList
+        ref={flatListRef}
         data={messages}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
@@ -91,14 +94,18 @@ export default function ChatScreen() {
             <Text>{item.user}: {item.text}</Text>
           </View>
         )}
+        onContentSizeChange={() => flatListRef.current.scrollToEnd()}
+        onLayout={() => flatListRef.current.scrollToEnd()}
       />
-      <TextInput
-        style={styles.input}
-        value={input}
-        onChangeText={setInput}
-        placeholder="Type your message"
-      />
-      <Button title="Send" onPress={sendMessage} />
+      <View style={styles.inputContainer}>
+        <TextInput
+          style={styles.input}
+          value={input}
+          onChangeText={setInput}
+          placeholder="Type your message"
+        />
+        <Button title="Send" onPress={sendMessage} />
+      </View>
     </View>
   );
 }
@@ -114,10 +121,15 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ccc',
     maxWidth: '80%', 
   },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   input: {
+    flex: 1,
     borderWidth: 1,
     borderColor: '#ccc',
     padding: 10,
-    marginVertical: 10,
+    marginRight: 10,
   },
 });
