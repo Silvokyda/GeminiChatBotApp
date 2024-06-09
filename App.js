@@ -9,7 +9,11 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator>
-        <Stack.Screen name="Chat" component={ChatScreen} />
+      <Stack.Screen 
+          name="Chat" 
+          component={ChatScreen} 
+          options={{ headerShown: false }}  
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );
