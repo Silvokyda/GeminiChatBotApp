@@ -52,10 +52,10 @@ export default function ChatScreen() {
     const chatbotResponse = await getChatbotResponse(input);
 
     const botMessage = {
-      text: chatbotResponse.reply,
+      text: chatbotResponse.text, 
       created_at: new Date().toISOString(),
       user: 'bot'
-    };
+    };    
 
     const { error: botMessageError } = await supabase.from('messages').insert([botMessage]);
 
@@ -72,7 +72,10 @@ export default function ChatScreen() {
         data={messages}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <View style={styles.messageContainer}>
+          <View style={[
+            styles.messageContainer,
+            { alignSelf: item.user === 'user' ? 'flex-end' : 'flex-start' }
+          ]}>
             <Text>{item.user}: {item.text}</Text>
           </View>
         )}
@@ -97,6 +100,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
+    maxWidth: '80%', // Limit message width
   },
   input: {
     borderWidth: 1,
