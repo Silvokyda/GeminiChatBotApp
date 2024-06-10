@@ -11,9 +11,9 @@ import Header from '../components/Header';
 const MessageItem = React.memo(({ item }) => (
   <View style={[
     styles.messageContainer,
-    { alignSelf: item.user === 'user' ? 'flex-end' : 'flex-start' }
+    item.user === 'user' ? styles.sentMessage : styles.receivedMessage
   ]}>
-    <Text>{item.user}: {item.text}</Text>
+    <Text style={styles.messageText}>{item.user}: {item.text}</Text>
   </View>
 ));
 
@@ -191,38 +191,67 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'column',
+    backgroundColor: '#fff',
   },
   header: {
     backgroundColor: '#f4f4f4',
-    padding: 5,
+    padding: 10,
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#ccc',
   },
-  chatContainer: {
+  main: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  chatSection: {
+    flex: 1,
     padding: 10,
   },
-  messageContainer: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
-    maxWidth: '80%',
+  chatContainer: {
+    flex: 1,
+    // marginBottom: 10,
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+    padding: 10,
+    backgroundColor: '#fff',
   },
   input: {
     flex: 1,
     borderWidth: 1,
     borderColor: '#ccc',
     padding: 10,
-borderRadius: 55,
+    borderRadius: 25,
+    marginRight: 10,
   },
   sidebarContainer: {
     left: 0,
     backgroundColor: '#f4f4f4',
+    borderRightWidth: 1,
+    overflow : 'hidden',
+  },
+  messageContainer: {
+    padding: 10,
+    borderRadius: 10,
+    marginVertical: 5,
+    maxWidth: '80%',
+  },
+  sentMessage: {
+    backgroundColor: '#dcf8c6',
+    alignSelf: 'flex-end',
+    borderBottomRightRadius: 0,
+  },
+  receivedMessage: {
+    backgroundColor: '#f1f1f1',
+    alignSelf: 'flex-start',
+    borderBottomLeftRadius: 0,
+  },
+  messageText: {
+    color: '#000',
   },
   bold: {
     fontWeight: 'bold',
