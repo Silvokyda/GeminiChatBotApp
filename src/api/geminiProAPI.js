@@ -1,7 +1,7 @@
 import { geminiProApiKey } from '../config/config';
 import axios from 'axios';
 
-const GEMINI_PRO_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyB3Sein-CE6soPv3b8GJj78_JeHny3rWoM'; 
+const GEMINI_PRO_API_URL = process.env.GEMINI_PRO_API_URL;
 
 export const getChatbotResponse = async (message) => {
   const payload = {

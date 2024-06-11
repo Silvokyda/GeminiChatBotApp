@@ -42,7 +42,7 @@ const LoginScreen = () => {
     
             const userId = session?.user?.id;
             const accessToken = session?.access_token; 
-            
+            // console.log("userId...", userId);
             if (userId && accessToken) {
                 // Save the access token locally
                 await AsyncStorage.setItem('accessToken', accessToken);
