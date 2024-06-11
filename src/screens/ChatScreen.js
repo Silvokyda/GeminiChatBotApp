@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TextInput, Button, FlatList, StyleSheet, PanResponder } from 'react-native';
 import { IconButton } from 'react-native-paper';
-
+import { useRoute } from '@react-navigation/native';
 import { supabase } from '../utils/supabase';
 import { getChatbotResponse } from '../api/geminiProAPI';
 import Sidebar from '../components/SideBar';
@@ -18,9 +17,12 @@ const MessageItem = React.memo(({ item }) => (
 ));
 
 export default function ChatScreen() {
+  const route = useRoute();
+  const userId = route.params ? route.params.userId : null;
+
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [sidebarVisible, setSidebarVisible] = useState(true); // Initially hide sidebar
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
   const flatListRef = useRef();
 
@@ -29,6 +31,7 @@ export default function ChatScreen() {
       const { data, error } = await supabase
         .from('messages')
         .select('*')
+        .eq('user_id', userId)
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -56,7 +59,7 @@ export default function ChatScreen() {
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, []);
+  }, [userId]);
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -65,6 +68,7 @@ export default function ChatScreen() {
       text: input,
       created_at: new Date().toISOString(),
       user: 'user',
+      user_id: userId,
     };
 
     const { error: userMessageError } = await supabase.from('messages').insert([userMessage]);
@@ -85,6 +89,7 @@ export default function ChatScreen() {
         text: formattedResponse,
         created_at: new Date().toISOString(),
         user: 'bot',
+        user_id: userId,
       };
 
       const { error: botMessageError } = await supabase.from('messages').insert([botMessage]);
@@ -102,17 +107,14 @@ export default function ChatScreen() {
   
     return formattedText;
   };
-  
-  // PanResponder for handling swipe gesture
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onPanResponderMove: (event, gestureState) => {
         if (gestureState.dx > 50) {
-          // Open sidebar if swipe gesture is towards right
           setSidebarVisible(true);
         } else if (gestureState.dx < -50) {
-          // Close sidebar if swipe gesture is towards left
           setSidebarVisible(false);
         }
       },
